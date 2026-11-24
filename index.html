@@ -70,7 +70,7 @@ input[type=file]{display:none}
 </head>
 <body>
 <header><h1>Onyx</h1><div style="display:flex;gap:8px"><button class="add" id="slb">☾ Sleep</button><button class="add" id="eqb">EQ</button><button class="add" id="add">+ Add songs</button></div></header>
-<input type="file" id="file" accept="audio/*" multiple>
+<input type="file" id="file" multiple>
 <section class="now" id="now">
   <div class="art"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm11-2a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
   <div class="title" id="title">Nothing playing</div>
@@ -100,7 +100,8 @@ function tx(m){return db.transaction('s',m).objectStore('s')}
 async function load(){db=await open();if(!db)return setView();try{const q=tx('readonly').getAll();q.onsuccess=()=>{all=q.result;setView()}}catch(e){setView()}}
 async function save(f){const o={name:f.name,blob:f};if(db)try{await new Promise(r=>{const q=tx('readwrite').add(o);q.onsuccess=()=>{o.id=q.result;r()};q.onerror=r})}catch(e){}if(o.id==null)o.id=Date.now()+Math.random();all.push(o)}
 $('add').onclick=()=>$('file').click();
-$('file').onchange=async e=>{for(const f of e.target.files){await save(f);if(view&&PL[view])PL[view].push(all[all.length-1].id)}plSave();e.target.value='';setView();if(!curS&&lib.length)play(0)};
+const ok=f=>/^audio\//.test(f.type)||/\.(mp3|m4a|aac|wav|flac|ogg|opus|wma|aiff?)$/i.test(f.name);
+$('file').onchange=async e=>{for(const f of [...e.target.files].filter(ok)){await save(f);if(view&&PL[view])PL[view].push(all[all.length-1].id)}plSave();e.target.value='';setView();if(!curS&&lib.length)play(0)};
 function render(){pls();
   const l=$('list');
   if(!lib.length){l.innerHTML='<div class="empty">'+(view?'This playlist is empty.<br>Tap + on a song to add it.<br>':'Your library is empty.<br>')+'Tap “Add songs” to pick audio files.<br>They are kept on this device and play without internet.</div>';return}
