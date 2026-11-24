@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Onyx Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<style>
+:root{color-scheme:dark;--bg:#000;--s1:#0b0b0b;--s2:#161616;--tx:#d6d6d6;--mu:#7d7d7d;--ac:#c4c4c4;--ln:#1e1e1e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{display:flex;flex-direction:column;max-width:520px;margin:0 auto;overflow-y:auto}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px 6px}
+h1{font-size:15px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin:0}
+.add{background:var(--s2);color:var(--ac);padding:9px 13px;border-radius:20px;font-size:13px;white-space:nowrap}
+.now{padding:14px 28px 4px;text-align:center}
+.art{width:min(62vw,240px);aspect-ratio:1;margin:8px auto 22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2a2a2a,#0e0e0e 70%);border:1px solid var(--ln);display:grid;place-items:center;transition:transform .6s}
+.art svg{width:38%;fill:none;stroke:var(--mu);stroke-width:1.5}
+.playing .art{transform:scale(1.03)}
+.title{font-size:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:14px;color:var(--mu);margin-top:4px;height:18px}
+.seek{margin:22px 0 0}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(to right,var(--ac) var(--p,0%),#262626 var(--p,0%))}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:#262626}
+input[type=range]::-moz-range-progress{height:3px;background:var(--ac)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--tx);margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:var(--tx)}
+.times{display:flex;justify-content:space-between;font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}
+.ctl{display:flex;justify-content:space-between;align-items:center;padding:10px 6px 8px}
+.ctl button{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:var(--mu)}
+.ctl button.on{color:var(--tx)}
+.ctl svg{width:24px;height:24px;fill:currentColor}
+.ctl .pp{width:68px;height:68px;background:var(--tx);color:#000}
+.ctl .pp svg{width:30px;height:30px}
+.list{flex:1 0 auto;min-height:240px;margin-top:8px;border-top:1px solid var(--ln);padding:6px 10px 20px}
+.row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px}
+.row.cur{background:var(--s1)}
+.row .n{width:22px;text-align:center;font-size:13px;color:var(--mu)}
+.row .t{flex:1;min-width:0;text-align:left}
+.row .t b{display:block;font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.cur .t b{color:#fff}
+.row .t i{font-style:normal;font-size:12px;color:var(--mu)}
+.row .x{color:#4a4a4a;font-size:20px;width:32px;height:32px}
+.empty{text-align:center;color:var(--mu);font-size:14px;padding:36px 24px;line-height:1.6}
+.ctl button{position:relative}
+.ctl button.on::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--tx)}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--s1);border-top:1px solid var(--ln);border-radius:22px 22px 0 0;padding:18px 22px calc(22px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .3s;z-index:5}
+.sheet.show{transform:none}
+.sheet h2{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin:0 0 14px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--s2);color:var(--mu);padding:7px 13px;border-radius:16px;font-size:13px}
+.chip.on{background:var(--tx);color:#000}
+.band{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--mu)}
+.band span:first-child{width:46px}
+.band span:last-child{width:46px;text-align:right;font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--mu);line-height:1.5;margin-top:14px;border-top:1px solid var(--ln);padding-top:12px}
+.pls{display:flex;gap:8px;overflow-x:auto;padding:4px 18px 10px;flex:none}
+.pls .chip{white-space:nowrap}
+.inp{flex:1;min-width:0;background:var(--s2);border:1px solid var(--ln);color:var(--tx);border-radius:16px;padding:9px 14px;font:inherit;font-size:14px;outline:0}
+input[type=file]{display:none}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Onyx">
+</head>
+<body>
+<header><h1>Onyx</h1><div style="display:flex;gap:8px"><button class="add" id="slb">☾ Sleep</button><button class="add" id="eqb">EQ</button><button class="add" id="add">+ Add songs</button></div></header>
+<input type="file" id="file" accept="audio/*" multiple>
+<section class="now" id="now">
+  <div class="art"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm11-2a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+  <div class="title" id="title">Nothing playing</div>
+  <div class="sub" id="sub">Add songs from your phone</div>
+  <div class="seek"><input type="range" id="seek" min="0" max="1000" value="0"><div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div></div>
+  <div class="ctl">
+    <button id="shuf" aria-label="Shuffle"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.6L5 17H2v-2h2.2L13.6 6H17V3zM2 7h3l3 3-1.4 1.4L4.2 9H2V7zm15 7l4 4-4 4v-3h-3.4l-2.2-2.2 1.4-1.4L14.4 16H17v-2z"/></svg></button>
+    <button id="prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM20 6v12L9.5 12z"/></svg></button>
+    <button id="pp" class="pp" aria-label="Play"><svg viewBox="0 0 24 24" id="ppi"><path d="M8 5v14l11-7z"/></svg></button>
+    <button id="next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6l10.5 6L4 18z"/></svg></button>
+    <button id="rep" aria-label="Repeat"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+  </div>
+</section>
+<div class="pls" id="pls"></div><div class="list" id="list"></div>
+<div class="sheet" id="ssheet"><h2><span>Sleep timer</span><button id="sx" aria-label="Close" style="font-size:22px;color:var(--mu)">×</button></h2><div class="chips" id="schips"></div></div>
+<div class="sheet" id="psheet"><h2><span id="ptitle">Add to playlist</span><button id="px" aria-label="Close" style="font-size:22px;color:var(--mu)">×</button></h2><div class="chips" id="pchoices"></div><div style="display:flex;gap:8px"><input class="inp" id="pname" placeholder="New playlist name" maxlength="30"><button class="chip on" id="pmake">Create</button></div></div>
+<div class="sheet" id="sheet"><h2><span>Equalizer</span><button id="eqx" aria-label="Close" style="font-size:22px;color:var(--mu)">×</button></h2><div class="chips" id="chips"></div><div id="bands"></div><div class="chips" style="margin:14px 0 0"><button class="chip" id="direct">Direct mode (bypass EQ)</button></div><div class="note">LDAC can’t be switched from inside an app. Android picks the Bluetooth codec itself: open Settings › Developer options › Bluetooth audio codec and choose LDAC. Direct mode skips all EQ processing so the music is passed on untouched.</div></div>
+<audio id="au" preload="metadata"></audio>
+<script>
+const $=id=>document.getElementById(id),au=$('au');
+let all=[],lib=[],idx=-1,shuf=false,rep=0,url=null,db=null,curS=null,view='',PL={},sl=null,slEnd=0,slSong=false,slT=null,addSong=null;
+const P='<path d="M8 5v14l11-7z"/>',Z='<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
+const clean=n=>n.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ');
+function open(){return new Promise(r=>{try{const q=indexedDB.open('onyx',1);q.onupgradeneeded=()=>q.result.createObjectStore('s',{keyPath:'id',autoIncrement:true});q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})}
+function tx(m){return db.transaction('s',m).objectStore('s')}
+async function load(){db=await open();if(!db)return setView();try{const q=tx('readonly').getAll();q.onsuccess=()=>{all=q.result;setView()}}catch(e){setView()}}
+async function save(f){const o={name:f.name,blob:f};if(db)try{await new Promise(r=>{const q=tx('readwrite').add(o);q.onsuccess=()=>{o.id=q.result;r()};q.onerror=r})}catch(e){}if(o.id==null)o.id=Date.now()+Math.random();all.push(o)}
+$('add').onclick=()=>$('file').click();
+$('file').onchange=async e=>{for(const f of e.target.files){await save(f);if(view&&PL[view])PL[view].push(all[all.length-1].id)}plSave();e.target.value='';setView();if(!curS&&lib.length)play(0)};
+function render(){pls();
+  const l=$('list');
+  if(!lib.length){l.innerHTML='<div class="empty">'+(view?'This playlist is empty.<br>Tap + on a song to add it.<br>':'Your library is empty.<br>')+'Tap “Add songs” to pick audio files.<br>They are kept on this device and play without internet.</div>';return}
+  l.innerHTML='';
+  lib.forEach((s,i)=>{const r=document.createElement('div');r.className='row'+(i===idx?' cur':'');
+    r.innerHTML='<span class="n">'+(i+1)+'</span><button class="t"><b></b><i>'+(s.blob.type.split('/')[1]||'audio').toUpperCase()+'</i></button><button class="x p" aria-label="Add to playlist">+</button><button class="x" aria-label="Remove">×</button>';
+    r.querySelector('b').textContent=clean(s.name);
+    r.querySelector('.t').onclick=()=>play(i);
+    r.querySelector('.x.p').onclick=()=>openAdd(s);r.querySelector('.x:not(.p)').onclick=()=>remove(i);
+    l.appendChild(r)})}
+function remove(i){const s=lib[i];if(view){PL[view]=PL[view].filter(x=>x!==s.id)}else{if(db)try{tx('readwrite').delete(s.id)}catch(e){}all.splice(all.indexOf(s),1);for(const k in PL)PL[k]=PL[k].filter(x=>x!==s.id)}plSave();lib.splice(i,1);if(s===curS)curS=null;
+  if(i===idx){au.pause();idx=-1;au.removeAttribute('src');ui()}else if(i<idx)idx--;render()}
+function play(i){if(i<0||i>=lib.length)return;idx=i;curS=lib[i];if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(lib[i].blob);au.src=url;au.play().catch(()=>{});ui();render();meta()}
+function ui(){const s=curS;$('title').textContent=s?clean(s.name):'Nothing playing';$('sub').textContent=s?(idx>=0?'Track '+(idx+1)+' of '+lib.length:'Playing'):'Add songs from your phone'}
+function meta(){if('mediaSession'in navigator&&lib[idx]){navigator.mediaSession.metadata=new MediaMetadata({title:clean(lib[idx].name),artist:'Onyx'});
+  navigator.mediaSession.setActionHandler('previoustrack',prev);navigator.mediaSession.setActionHandler('nexttrack',()=>next(true));
+  navigator.mediaSession.setActionHandler('play',()=>au.play());navigator.mediaSession.setActionHandler('pause',()=>au.pause())}}
+function next(manual){if(!lib.length)return;let n;if(shuf&&lib.length>1){do n=Math.floor(Math.random()*lib.length);while(n===idx)}else{n=idx+1;if(n>=lib.length){if(rep===1||manual)n=0;else return}}play(n)}
+function prev(){if(au.currentTime>3)au.currentTime=0;else play(idx<=0?lib.length-1:idx-1)}
+$('pp').onclick=()=>{if(idx<0)return lib.length&&play(0);au.paused?au.play():au.pause()};
+$('next').onclick=()=>next(true);$('prev').onclick=prev;
+$('shuf').onclick=e=>{shuf=!shuf;e.currentTarget.classList.toggle('on',shuf)};
+$('rep').onclick=e=>{rep=(rep+1)%3;e.currentTarget.classList.toggle('on',rep>0);e.currentTarget.style.opacity=rep===2?.55:1};
+au.onplay=()=>{eqInit();$('ppi').innerHTML=Z;$('now').classList.add('playing')};
+au.onpause=()=>{$('ppi').innerHTML=P;$('now').classList.remove('playing')};
+au.onended=()=>{if(slSong){slSong=false;sl=null;slui();return}if(rep===2){au.currentTime=0;au.play()}else next(false)};
+au.ontimeupdate=()=>{if(!au.duration)return;const p=au.currentTime/au.duration*100;$('seek').value=p*10;$('seek').style.setProperty('--p',p+'%');$('cur').textContent=fmt(au.currentTime)};
+au.onloadedmetadata=()=>$('dur').textContent=fmt(au.duration);
+const F=[60,230,910,3600,14000],L=['60 Hz','230 Hz','910 Hz','3.6 kHz','14 kHz'];
+const PR={Flat:[0,0,0,0,0],Bass:[7,4,0,-1,0],Vocal:[-2,0,4,3,-1],Treble:[-1,0,1,4,7],Rock:[5,2,-2,2,5]};
+let eq={g:[0,0,0,0,0],direct:false,p:'Flat'},ctx=null,src,fl=[];
+try{Object.assign(eq,JSON.parse(localStorage.getItem('onyxeq')||'{}'))}catch(e){}
+function eqSave(){try{localStorage.setItem('onyxeq',JSON.stringify(eq))}catch(e){}}
+function route(){if(!ctx)return;src.disconnect();fl.forEach(n=>n.disconnect());if(eq.direct){src.connect(ctx.destination)}else{let n=src;fl.forEach(f=>{n.connect(f);n=f});n.connect(ctx.destination)}}
+function eqInit(){if(ctx){if(ctx.state==='suspended')ctx.resume();return}
+  try{ctx=new(window.AudioContext||window.webkitAudioContext)();src=ctx.createMediaElementSource(au);
+  fl=F.map((f,i)=>{const b=ctx.createBiquadFilter();b.type=i===0?'lowshelf':i===4?'highshelf':'peaking';b.frequency.value=f;b.Q.value=1;b.gain.value=eq.g[i]||0;return b});route()}catch(e){ctx=null}}
+function applyP(n){eq.g=[...PR[n]];eq.p=n;fl.forEach((f,i)=>f.gain.value=eq.g[i]);eqSave();eqUI()}
+function eqUI(){const c=$('chips');c.innerHTML='';
+  Object.keys(PR).forEach(n=>{const b=document.createElement('button');b.className='chip'+(eq.p===n?' on':'');b.textContent=n;b.onclick=()=>applyP(n);c.appendChild(b)});
+  const bd=$('bands');bd.innerHTML='';
+  F.forEach((f,i)=>{const d=document.createElement('div');d.className='band';d.innerHTML='<span>'+L[i]+'</span><input type="range" min="-12" max="12" step="1"><span></span>';
+    const r=d.querySelector('input'),v=d.lastChild;
+    const show=x=>{v.textContent=(x>0?'+':'')+x+' dB';r.style.setProperty('--p',(x+12)/24*100+'%')};
+    r.value=eq.g[i]||0;show(+r.value);
+    r.oninput=()=>{const x=+r.value;show(x);eq.g[i]=x;eq.p='';if(fl[i])fl[i].gain.value=x;eqSave();c.querySelectorAll('.chip').forEach(k=>k.classList.remove('on'))};
+    bd.appendChild(d)});
+  $('direct').classList.toggle('on',!!eq.direct);bd.style.opacity=eq.direct?.35:1}
+$('direct').onclick=()=>{eq.direct=!eq.direct;route();eqSave();eqUI()};
+$('eqb').onclick=()=>only('sheet');
+$('eqx').onclick=()=>$('sheet').classList.remove('show');
+eqUI();
+$('seek').oninput=e=>{if(au.duration)au.currentTime=e.target.value/1000*au.duration};
+try{PL=JSON.parse(localStorage.getItem('onyxpl')||'{}')}catch(e){PL={}}
+function plSave(){try{localStorage.setItem('onyxpl',JSON.stringify(PL))}catch(e){}}
+function only(id){['sheet','ssheet','psheet'].forEach(x=>$(x).classList.toggle('show',x===id))}
+function setView(){lib=view&&PL[view]?PL[view].map(id=>all.find(s=>s.id===id)).filter(Boolean):all.slice();idx=curS?lib.indexOf(curS):-1;render()}
+function pls(){const c=$('pls');c.innerHTML='';const mk=(t,on,f)=>{const b=document.createElement('button');b.className='chip'+(on?' on':'');b.textContent=t;b.onclick=f;c.appendChild(b)};
+  mk('All songs',!view,()=>{view='';setView()});
+  Object.keys(PL).forEach(n=>mk(n,view===n,()=>{view=n;setView()}));
+  mk('+ New',false,()=>{addSong=null;psheet()});
+  if(view)mk('Delete list',false,()=>{delete PL[view];view='';plSave();setView()})}
+function psheet(){$('ptitle').textContent=addSong?'Add to playlist':'New playlist';const c=$('pchoices');c.innerHTML='';
+  if(addSong)Object.keys(PL).forEach(n=>{const has=PL[n].includes(addSong.id),b=document.createElement('button');b.className='chip'+(has?' on':'');b.textContent=(has?'✓ ':'')+n;
+    b.onclick=()=>{if(!has)PL[n].push(addSong.id);plSave();only('');if(view===n)setView()};c.appendChild(b)});
+  only('psheet')}
+function openAdd(s){addSong=s;psheet()}
+$('pmake').onclick=()=>{const n=$('pname').value.trim();if(!n||PL[n])return;PL[n]=addSong?[addSong.id]:[];plSave();$('pname').value='';only('');if(!addSong)view=n;setView()};
+$('px').onclick=()=>only('');
+$('sx').onclick=()=>only('');
+const SO=[['Off',0],['15 min',15],['30 min',30],['45 min',45],['60 min',60],['90 min',90],['End of song','song']];
+SO.forEach(([t,m])=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>setSleep(m);$('schips').appendChild(b)});
+function setSleep(m){clearInterval(slT);sl=null;slSong=false;if(m==='song'){slSong=true;sl=1}else if(m){sl=m;slEnd=Date.now()+m*60000;slT=setInterval(tick,1000)}slui();only('')}
+function tick(){if(slEnd-Date.now()<=0){clearInterval(slT);sl=null;slui();fade()}else slui()}
+function fade(){let v=1;const t=setInterval(()=>{v-=.05;if(v<=0){clearInterval(t);au.pause();au.volume=1}else au.volume=v},250)}
+function slui(){$('slb').textContent=slSong?'☾ End of song':sl?'☾ '+fmt(Math.max(0,(slEnd-Date.now())/1000)):'☾ Sleep'}
+$('slb').onclick=()=>only('ssheet');
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+load();
+</script>
+</body>
+</html>
